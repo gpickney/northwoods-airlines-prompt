@@ -1,7 +1,7 @@
 USE USER_GPICKNEY.PUBLIC;
 
 CREATE VIEW IF NOT EXISTS DELAY_REASONS_BY_AIRPORT AS SELECT
-  -- if delay occurred, then all delay reason columns are >=0 with reason for delay
+  -- If delay occurred, then all delay reason columns are >=0 with reason for delay
   COUNT(NULLIFZERO(AIR_SYSTEM_DELAY)) AS AIR_SYSTEM_DELAY_COUNT,
   COUNT(NULLIFZERO(SECURITY_DELAY)) AS SECURITY_DELAY_COUNT,
   COUNT(NULLIFZERO(AIRLINE_DELAY)) AS AIRLINE_DELAY_COUNT,

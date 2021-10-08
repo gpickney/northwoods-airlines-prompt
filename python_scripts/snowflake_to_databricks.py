@@ -1,13 +1,26 @@
 from pyspark.sql.functions import col
 from pyspark.sql.types import StringType
 
-dbutils.widgets.removeAll()
+url = "https://cka39758.us-east-1.snowflakecomputing.com"
+user = "gpickney"
+# snowflake connection options
+options = {
+  "sfUrl": url,
+  "sfUser": user,
+  "sfPassword": dbutils.fs.head("dbfs:/tmp/sfPassword"),
+  "sfDatabase": "USER_GPICKNEY",
+  "sfSchema": "PUBLIC",
+  "sfWarehouse": "INTERVIEW_WH"
+}
+
 # Set up widgets for Airline, Airport, and Month
 WIDGETS_DICT = {
   'AIRLINES': ["*"],
   'AIRPORTS': ["*"],
   'MONTHS': ["*"]
 }
+
+dbutils.widgets.removeAll()
 
 airlines = spark.read.format("snowflake").options(**options).option("dbtable", "AIRLINES").load()
 WIDGETS_DICT.get('AIRLINES').extend(sorted([str(row.AIRLINE) for row in airlines.select('AIRLINE').collect()]))
@@ -33,24 +46,26 @@ monthly_agg_flights_airline_df = spark.read \
   .format("snowflake") \
   .options(**options) \
   .option("dbtable", "MONTHLY_AGG_FLIGHTS_AIRLINE") \
-  .load()
+  .load() \
+  .persist()
 
 display(
   monthly_agg_flights_airline_df
-  .where(col('AIRLINE').isin(get_widget_values('AIRLINES')))
-  .where(col('MONTH').cast(StringType()).isin(get_widget_values('MONTHS')))
+  .where(col('AIRLINE').isin(get_widget_values('AIRLINES')) &
+         col('MONTH').cast(StringType()).isin(get_widget_values('MONTHS')))
 )
 #REPORT 1b: Total number of flights by airport per month
 monthly_agg_flights_airport_df = spark.read \
   .format("snowflake") \
   .options(**options) \
   .option("dbtable", "MONTHLY_AGG_FLIGHTS_AIRPORT") \
-  .load()
+  .load() \
+  .persist()
 
 display(
   monthly_agg_flights_airport_df
-  .where(col('AIRPORT').isin(get_widget_values('AIRPORTS')))
-  .where(col('MONTH').cast(StringType()).isin(get_widget_values('MONTHS')))
+  .where(col('AIRPORT').isin(get_widget_values('AIRPORTS')) &
+         col('MONTH').cast(StringType()).isin(get_widget_values('MONTHS')))
 )
 
 #REPORT 2: On time percentage of each airline for the year 2015
@@ -58,7 +73,8 @@ on_time_percentage_by_airline_2015 = spark.read \
   .format("snowflake") \
   .options(**options) \
   .option("dbtable", "ON_TIME_PERCENTAGE_AIRLINE_2015") \
-  .load()
+  .load() \
+  .persist()
 
 display(
   on_time_percentage_by_airline_2015
@@ -70,7 +86,8 @@ delays_by_airline_df = spark.read \
   .format("snowflake") \
   .options(**options) \
   .option("dbtable", "DELAYS_BY_AIRLINE") \
-  .load()
+  .load() \
+  .persist()
 
 display(
   delays_by_airline_df
@@ -82,7 +99,8 @@ cancel_reason_by_airport_df = spark.read \
   .format("snowflake") \
   .options(**options) \
   .option("dbtable", "CANCELLATIONS_REASONS_BY_AIRPORT") \
-  .load()
+  .load() \
+  .persist()
 
 display(
   cancel_reason_by_airport_df
@@ -94,7 +112,8 @@ delay_reasons_by_airport_df = spark.read \
   .format("snowflake") \
   .options(**options) \
   .option("dbtable", "DELAY_REASONS_BY_AIRPORT") \
-  .load()
+  .load() \
+  .persist()
 
 display(
   delay_reasons_by_airport_df
@@ -106,7 +125,8 @@ unique_routes_by_airline = spark.read \
   .format("snowflake") \
   .options(**options) \
   .option("dbtable", "NUMBER_UNIQUE_ROUTES_AIRLINE") \
-  .load()
+  .load() \
+  .persist()
 
 display(
   unique_routes_by_airline
